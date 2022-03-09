@@ -1,23 +1,30 @@
-function test(n, N, G_n)
-    % n = 10;         # number of particles in a subgroup
-    % N = 10;         # number of way-points
-    % G_n = 5;        # number of subgroups
-    startpoint = [0; 0];
-    endpoint = [30; 30];
-    position_range = [min([startpoint, endpoint](2,:)), max([startpoint, endpoint](2,:))];
-    xIntervals = linspace(startpoint(1),endpoint(1),N);
-    # swarm initialization
-    swarm = swarmInit(startpoint, endpoint, position_range, n, N, G_n)
-    for i = 1:size(swarm,3)
-        figure
-        plot(xIntervals, swarm(:,:,i)')
-    endfor
+function test
+    a(:,:,1) = [1,2;2,3];
+    a(:,:,2) = [2,3;3,4];
+    a(:,:,3) = [3,4;4,5];
+    a(:,:,4) = [4,5;5,6];
+    a(:,:,5) = [5,6;6,7];
+    a(:,:,6) = [6,7;7,8];
+    a(:,:,7) = [7,8;8,9];
+    a(:,:,8) = [8,9;9,10];
+    b = [0,1,3,9,10;0,2,4,7,10;0,1,3,8,10;0,2,4,7,10;0,2,5,7,10;0,1,3,9,10;0,2,4,7,10;0,1,1,1,10];
+    [~,i] = unique(b,"rows", "stable")
+    missingindex = resetIndex(i);
+    if ~isempty(missingindex)
+        for i = missingindex
+            a(:,:,i) = rand(2,2)
+        endfor
+    endif
 endfunction
 
-function swarm = swarmInit (startpoint, endpoint, position_range, n, N, G_n)
-## input format: swarm size = n by N by G_n
-    swarm = rand(n, N, G_n)*10 - 5 + linspace(startpoint(2),endpoint(2),N);
-    swarm(:,1,:) = startpoint(2);
-    swarm(:,end,:) = endpoint(2);
-    swarm = swarm - (swarm < position_range(1)) .* swarm - (swarm > position_range(2)) .* swarm + (swarm > position_range(2))*position_range(2);
+function missingindex = resetIndex (rowindex)
+    missingindex = [];
+    j = 1;
+    for i = 1:rowindex(end)
+        if i != rowindex(j)
+            missingindex = [missingindex, i];
+        else
+            j++;
+        endif
+    endfor
 endfunction
