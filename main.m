@@ -56,7 +56,7 @@ function retval = main
     position_range = [min([startpoint, endpoint](2,:)), max([startpoint, endpoint](2,:))];
     xIntervals = linspace(startpoint(1),endpoint(1),N);
     # swarm initialization
-    swarm = swarmInit(startpoint, endpoint, position_range, n, N, G_n)
+    swarm = swarmInit(startpoint, endpoint, position_range, n, N, G_n);
     % for i = 1:size(swarm,3)
     %     figure
     %     plot(xIntervals, swarm(:,:,i)')
@@ -65,13 +65,14 @@ function retval = main
     theta_Tmax = 90;
     theta_Cmax = 45;
     threat_source = [6.2280, 17.781, 15.681, 6.5280, 22.581, 15.057, 21.036; 8.5230, 4.6080, 17.208, 13.629, 21.108, 11.835, 15.846; 2.2826, 1.9663, 2.8540, 2.0762, 1.9393, 2.4483, 2.4404];
-    threat_source = [30; 0; 1];
+    % threat_source = [30; 0; 1];
     # PSO parameters
-    maxgeneration = 1;
+    maxgeneration = 3;
     omega = linspace(0.7, 0.4, maxgeneration);
     phi_p = 0.2;    # cognitive coefficient
     phi_g = 0.2;    # social coefficient
     velocity_range = [-6.0, 6.0];
+    velocity = rand(size(swarm)) * abs(diff(velocity_range)) + min(velocity_range);
     # objective function weights
     omega_d = 0.3;
     omega_c = 0.5;
@@ -89,7 +90,7 @@ function retval = main
     # The solution is apparently the best particle from each group
     solution = shiftdim(G_pos,1)';
 
-    while generation <= maxgeneration:
+    while generation <= maxgeneration
         # calculate the objective of this iteration of swarm
         P_objective = F(swarm, xIntervals, solution, threat_source, theta_Tmax, theta_Cmax, omega_d, omega_c, CT, N_W);
         # refresh P_pos and P_obj
@@ -116,23 +117,68 @@ function retval = main
             endif
         endfor
         # regenerates the solution from G_pos
-        solution = shiftdim(G_pos,1)'
+        solution = shiftdim(G_pos,1)';
         # check if there is any duplication of particles
         [~, rowindex] = unique(solution, "rows", "stable");
         missingindex = resetIndex(rowindex);
         if ~isempty(missingindex)
             for i = missingindex
                 swarm(:,:,i) = swarmInit(startpoint, endpoint, position_range, n, N, 1);
-            endfor
-            objective = F(swarm, xIntervals, solution, threat_source, theta_Tmax, theta_Cmax, omega_d, omega_c, CT, N_W);
-            for i = missingindex
-                solution(i,:) = swarm(1,:,i);
                 P_pos(:,:,i) = swarm(:,:,i);
-                P_obj(:,:,i) = F(swarm, xIntervals, solution, threat_source, theta_Tmax, theta_Cmax, omega_d, omega_c, CT, N_W);
+                P_obj(:,:,i) = inf;
+                G_pos(:,:,i) = swarm(1,:,i);
+                G_obj(:,:,i) = inf;
+                solution(i,:) = swarm(1,:,i);
             endfor
         endif
+
+        ## Step 4
+        # update velocity and position of the swarm
+        for i = 1:size(velocity,3)
+            if any(missingindex(:) == i)
+                # if the subgroup is just reset, its P_pos and G_pos is not valid, skip the update
+                continue
+            endif
+            for j = 1:rows(velocity)
+                for k = 1:columns(velocity)
+                    velocity(j,k,i) = omega(generation)*velocity(j,k,i) + phi_p*rand()*(P_pos(j,k,i)-swarm(j,k,i)) + phi_g*rand()*(G_pos(1,k,i)-swarm(j,k,i));
+                    swarm(j,k,i) = swarm(j,k,i) + velocity(j,k,i);
+                endfor
+            endfor
+        endfor
+        # submit to the position range constraint
+        swarm = swarm - (swarm < position_range(1)) .* swarm - (swarm > position_range(2)) .* swarm + (swarm > position_range(2))*position_range(2);
+
+        ## Step 5
+        # adjust the particles to satisfy y(i) <= y(i+1)
+        for i = 1:size(swarm,3)
+            for j = 1:rows(swarm)
+                swarm(j,:,i) = particleAdjust(swarm(j,:,i));
+            endfor
+        endfor
+        
+        generation++;
+        figure
+        plot(xIntervals, solution)
+        G_obj
     endwhile
 
+endfunction
+
+function adjustedparticle = particleAdjust (particle)
+    [v, i] = min(diff(particle)>=0);
+    if v == 0
+        [w, j] = max((particle(i:end) - particle(i))>0);
+        if w == 1
+            particle(i+1) = particle(i) + (particle(i+j-1) - particle(i))/(j-1)*rand();
+            adjustedparticle = particleAdjust(particle);
+        else
+            particle(i:end) = particle(i);
+            adjustedparticle = particle;
+        endif
+    else
+        adjustedparticle = particle;
+    endif
 endfunction
 
 function missingindex = resetIndex (rowindex)

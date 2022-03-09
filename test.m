@@ -1,30 +1,27 @@
 function test
-    a(:,:,1) = [1,2;2,3];
-    a(:,:,2) = [2,3;3,4];
-    a(:,:,3) = [3,4;4,5];
-    a(:,:,4) = [4,5;5,6];
-    a(:,:,5) = [5,6;6,7];
-    a(:,:,6) = [6,7;7,8];
-    a(:,:,7) = [7,8;8,9];
-    a(:,:,8) = [8,9;9,10];
-    b = [0,1,3,9,10;0,2,4,7,10;0,1,3,8,10;0,2,4,7,10;0,2,5,7,10;0,1,3,9,10;0,2,4,7,10;0,1,1,1,10];
-    [~,i] = unique(b,"rows", "stable")
-    missingindex = resetIndex(i);
-    if ~isempty(missingindex)
-        for i = missingindex
-            a(:,:,i) = rand(2,2)
-        endfor
-    endif
+    particle = rand(1,10)*10 - 5 + linspace(0,30,10);
+    particle(1) = 0;
+    particle(end) = 30;
+    particle = particle - (particle < 0) .* particle - (particle > 30) .* particle + (particle > 30)*30;
+    plot(particle)
+    hold on;
+    adjustedparticle = particleAdjust (particle);
+    plot(adjustedparticle)
+    hold off;
 endfunction
 
-function missingindex = resetIndex (rowindex)
-    missingindex = [];
-    j = 1;
-    for i = 1:rowindex(end)
-        if i != rowindex(j)
-            missingindex = [missingindex, i];
+function adjustedparticle = particleAdjust (particle)
+    [v, i] = min(diff(particle)>=0);
+    if v == 0
+        [w, j] = max((particle(i:end) - particle(i))>0);
+        if w == 1
+            particle(i+1) = particle(i) + (particle(i+j-1) - particle(i))/(j-1)*rand();
+            adjustedparticle = particleAdjust(particle);
         else
-            j++;
+            particle(i:end) = particle(i);
+            adjustedparticle = particle;
         endif
-    endfor
+    else
+        adjustedparticle = particle;
+    endif
 endfunction
