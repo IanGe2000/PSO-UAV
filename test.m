@@ -1,20 +1,23 @@
-function test
-    A = [5,4,3,0,-3,-4,-5,-4,-3,0,3,4; 0,3,4,5,4,3,0,-3,-4,-5,-4,-3];
-    B = [0,1,2,3,4,5;0,0,0,0,0,0];
-    
-    altitude(A)
+function test(n, N, G_n)
+    % n = 10;         # number of particles in a subgroup
+    % N = 10;         # number of way-points
+    % G_n = 5;        # number of subgroups
+    startpoint = [0; 0];
+    endpoint = [30; 30];
+    position_range = [min([startpoint, endpoint](2,:)), max([startpoint, endpoint](2,:))];
+    xIntervals = linspace(startpoint(1),endpoint(1),N);
+    # swarm initialization
+    swarm = swarmInit(startpoint, endpoint, position_range, n, N, G_n)
+    for i = 1:size(swarm,3)
+        figure
+        plot(xIntervals, swarm(:,:,i)')
+    endfor
 endfunction
 
-function z = altitude (X)
-## input format: way-point = [x1, x2, ...; y1, y2, ...]
-    p1 = 0.1501;
-    p2 = 0.2311;
-    p3 = 0.7068;
-    p4 = 0.4860;
-    p5 = 0.6913;
-    p6 = 0.2621;
-    p7 = 0.4565;
-    x = X(1,:);
-    y = X(2,:);
-    z = sin(y+p1) + p2.*sin(x) + p3.*cos(p4.*sqrt(x.^2+y.^2)) + p5.*cos(y) + p6.*sin(p6.*sqrt(x.^2+y.^2)) + p7.*cos(y);
+function swarm = swarmInit (startpoint, endpoint, position_range, n, N, G_n)
+## input format: swarm size = n by N by G_n
+    swarm = rand(n, N, G_n)*10 - 5 + linspace(startpoint(2),endpoint(2),N);
+    swarm(:,1,:) = startpoint(2);
+    swarm(:,end,:) = endpoint(2);
+    swarm = swarm - (swarm < position_range(1)) .* swarm - (swarm > position_range(2)) .* swarm + (swarm > position_range(2))*position_range(2);
 endfunction

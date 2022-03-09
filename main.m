@@ -22,26 +22,48 @@
 ## Author: iange <iange@IANSOMEN>
 ## Created: 2022-03-04
 
+## termimologies:
+## trajectory = [x1, x2, ..., xN; y1, y2, ..., yN; z1, z2, ..., zN]
+## course = [x1, x2, ..., xN; y1, y2, ..., yN]
+## xIntervals = [x1, x2, ..., xN]
+## particle = [y1, y2, ..., yN]
+## 
+## subgroup = [y11, y12, ..., y1N; y21, y22, ..., y2N; ...; yn1, yn2, ..., ynN]
+##        with each row being a particle
+## swarm(:,:,i) = subgroup(i)
+##        with each page being a subgroup
+## solution = [y11, y12, ..., y1N; y21, y22, ..., y2N; ...; yG_n1, yG_n2, ..., yG_nN]
+##        with each row being the best particle from its subgroup
+## 
+## N = number of discrete points along the x axis
+## G_n = number of subgroups
+## n = number of particles within each subgroup
+## 
+## slice = [x1, x2; y1, y2]
+## segment = [x1, x2, x3; y1, y2, y3; z1, z2, z3]
+## 
+## threat_sourse = [T1, T2, ...; r1, r2, ...] = [x1, x2, ...; y1, y2, ...; r1, r2, ...]
+
 function retval = main
     ## Step 1
-    G_n = 5;        # number of particles
+    n = 10;         # number of particles in a subgroup
     N = 10;         # number of way-points
+    G_n = 5;        # number of subgroups
     startpoint = [0; 0];
     endpoint = [30; 30];
     position_range = [min([startpoint, endpoint](2,:)), max([startpoint, endpoint](2,:))];
     xIntervals = linspace(startpoint(1),endpoint(1),N);
     # swarm initialization
-    swarm = rand(G_n, N)*10 - 5 + linspace(startpoint(2),endpoint(2),N);
-    swarm(:,1) = startpoint(2);
-    swarm(:,end) = endpoint(2);
-    swarm = swarm - (swarm < position_range(1)) .* swarm - (swarm > position_range(2)) .* swarm + (swarm > position_range(2))*position_range(2);
-    plot(xIntervals,swarm(1,:), "-*")
+    swarm = swarmInit(startpoint, endpoint, position_range, n, N, G_n);
+    for i = 1:size(swarm,3)
+        figure
+        plot(xIntervals, swarm(:,:,i)')
+    endfor
     # constraints
-    theta_Tmax = 60;
+    theta_Tmax = 90;
     theta_Cmax = 45;
-    % threat_source = [6.2280, 17.781, 15.681, 6.5280, 22.581, 15.057, 21.036; 8.5230, 4.6080, 17.208, 13.629, 21.108, 11.835, 15.846; 2.2826, 1.9663, 2.8540, 2.0762, 1.9393, 2.4483, 2.4404];
-    threat_source = [30; 0; 0];
-
+    threat_source = [6.2280, 17.781, 15.681, 6.5280, 22.581, 15.057, 21.036; 8.5230, 4.6080, 17.208, 13.629, 21.108, 11.835, 15.846; 2.2826, 1.9663, 2.8540, 2.0762, 1.9393, 2.4483, 2.4404];
+    threat_source = [30; 0; 1];
     # PSO parameters
     maxgeneration = 1;
     omega = linspace(0.7, 0.4, maxgeneration);
@@ -56,15 +78,27 @@ function retval = main
 
     ## Step 2
     generation = 1;
+    solution = shiftdim(swarm(1,:,:),1)';
+    P_pos = swarm;      # particle's best position
+    objective = F(swarm, xIntervals, threat_source, theta_Tmax, theta_Cmax, omega_d, omega_c, CT, N_W);
+    P_obj = objective;  # particle's best objective
+    [G_obj, swarm_best_index] = min(objective); # swarm's best objective
+    G_pos = swarm(swarm_best_index,:);          # swarm's best position
     while generation <= maxgeneration
-        objective = zeros(G_n, 1);
-        for i = 1:1
-            objective(i) = F(swarm(i,:), xIntervals, threat_source, theta_Tmax, theta_Cmax, omega_d, omega_c, CT, N_W);
-        endfor
-        objective
+        objective = F(swarm, xIntervals, threat_source, theta_Tmax, theta_Cmax, omega_d, omega_c, CT, N_W);
+        [objective_min, swarm_best_index] = min(objective);
+
         generation++;
     endwhile
 
+endfunction
+
+function swarm = swarmInit (startpoint, endpoint, position_range, n, N, G_n)
+## input format: swarm size = n by N by G_n
+    swarm = rand(n, N, G_n)*10 - 5 + linspace(startpoint(2),endpoint(2),N);
+    swarm(:,1,:) = startpoint(2);
+    swarm(:,end,:) = endpoint(2);
+    swarm = swarm - (swarm < position_range(1)) .* swarm - (swarm > position_range(2)) .* swarm + (swarm > position_range(2))*position_range(2);
 endfunction
 
 function d = distance (varargin)
@@ -171,6 +205,19 @@ function trajectory = particle2Trajectory (particle, xIntervals)
     trajectory = [xIntervals; particle; altitude([xIntervals; particle])];
 endfunction
 
+function trajectory = course2Trajectory (course)
+## convert course into trajectory
+    trajectory = [course; altitude(course)];  
+endfunction
+
+function trajectory = swarm2Trajectory (swarm, xIntervals)
+## convert swarm into trajectories (each page is a trajectory)
+    trajectory = zeros(3,columns(swarm),rows(swarm));
+    for i = 1:rows(swarm)
+        trajectory(:,:,i) = particle2Trajectory(swarm(i,:), xIntervals);
+    endfor
+endfunction
+
 function pathDistance = F_d (varargin)
 ## input format: 1 input: trajectory = [x1, x2, ...; y1, y2, ...; z1, z2, ...]
 ##               2 inputs: particle = [y1, y2, ..., yN]; xIntervals = [x1, x2, ..., xN]
@@ -215,21 +262,21 @@ function bool = threatConflict (course, threat_source)
     booltable = booltable1 | ~booltable1 & ~booltable2 & booltable3;## if each slice conflicts with each threat_source   ## (T by N-1)
     bool = sum(sum(booltable,"native"),"native");               ## if any slice conflicts with any threat_source         ## (1 by 1)
 
-    disp("threatConflict")
-    d1
-    d2
-    d3    
-    booltable1
-    booltable2
-    booltable3
-    booltable
-    bool
+    % disp("threatConflict")
+    % d1
+    % d2
+    % d3    
+    % booltable1
+    % booltable2
+    % booltable3
+    % booltable
+    % bool
 endfunction
 
 function theta = turningAngle (segment)
-## input format: segment = [x(i-1),y(i-1),z(i-1); x(i),y(i),z(i); x(i+1),y(i+1),z(i+1)]
-    dif = diff(segment);
-    theta = acosd((dif(1)*dif(2)+dif(3)*dif(4))/(sqrt((dif(1))^2+(dif(3))^2)*sqrt((dif(2))^2+(dif(4))^2)));
+## input format: segment = [x(i-1), x(i), x(i+1); y(i-1), y(i), y(i+1); z(i-1), z(i), z(i+1)]
+    dif = diff(segment,1,2);
+    theta = acosd((dif(1)*dif(4)+dif(2)*dif(5))/(sqrt((dif(1))^2+(dif(2))^2)*sqrt((dif(4))^2+(dif(5))^2)));
 endfunction
 
 function bool = maxTurningAngle (trajectory, theta_Tmax)
@@ -240,24 +287,46 @@ function bool = maxTurningAngle (trajectory, theta_Tmax)
         bool(i) = turningAngle(trajectory(:,i:i+2)) < theta_Tmax;
     endfor
 
-    disp("maxTurningAngle")
-    bool
+    % disp("maxTurningAngle")
+    % bool
 endfunction
 
-function cooperativeFactor = F_c (particle, CT)
-## input format: particle = [y1, y2, ..., yN]
+function cooperativeFactor = F_c (swarm, CT, varargin)
+## input format: swarm = [y11, y12, ..., y1N; y21, y22, ..., y2N; ...; yG_n1, yG_n2, ..., yG_nN]
 ##               CT = cooperative threshold 
-    D_M = zeros(rows(particle)-1, columns(particle), rows(particle));
-    for i = 1:rows(particle) #page index of D_M / for each particle
-        for j = 1:rows(particle)  #row index of D_M / compared to every other particle
-            if j == i
+##               (particleindex) specifies the particle
+## output format: cooperativeFactor is a (G_n by 1) 0/1 matrix when particle is not specified, 0/1 number when it is
+    if columns(varargin) == 0
+        D_M = zeros(rows(swarm)-1, columns(swarm), rows(swarm));
+        k = 1;
+        for i = 1:rows(swarm) #page index of D_M / for each particle
+            for j = 1:rows(swarm)  #row index of D_M / compared to every other particle
+                if j == i
+                    continue
+                else
+                    D_M(k++,:,i) = abs(swarm(i,:) - swarm(j,:));
+                endif
+            endfor
+        endfor
+        cooperativeFactor = reshape(sum(min(D_M)>=CT), rows(swarm), 1);
+    elseif columns(varargin) == 1
+        particleindex = varargin{1};
+        D_M = zeros(rows(swarm)-1, columns(swarm));
+        k = 1;
+        for j = 1:rows(swarm)  #row index of D_M / compared to every other particle
+            if j == particleindex
                 continue
             else
-                D_M(j,:,i) = abs(particle(i,:) - particle(j,:));
+                D_M(k++,:) = abs(swarm(particleindex,:) - swarm(j,:));
             endif
         endfor
-    endfor
-    cooperativeFactor = reshape(sum(min(D_M)>=CT), rows(particle), 1);
+        cooperativeFactor = sum(min(D_M)>=CT);
+    endif
+    % disp("cooperativeFactor")
+    % D_M
+    % min(D_M)
+    % min(D_M)>=CT
+    % sum(min(D_M)>=CT)
 endfunction
 
 function altitude = F_a (trajectory, N_W)
@@ -281,17 +350,22 @@ function bool = maxClimbingDivingAngle (course, theta_Cmax)
         bool(i) = climbingDivingAngle(course(:,i:i+1)) < theta_Cmax;
     endfor
 
-    disp("maxClimbingDivingAngle")
-    bool
+    % disp("maxClimbingDivingAngle")
+    % bool
 endfunction
 
-function objective = F (particle, xIntervals, threat_source, theta_Tmax, theta_Cmax, omega_d, omega_c, CT, N_W)
-## input format: particle = [y1, y2, ..., yN]; xIntervals = [x1, x2, ..., xN]
-## output format: objective is a real number
-    trajectory = particle2Trajectory (particle, xIntervals);
-    if threatConflict([xIntervals; particle], threat_source) || ~prod(maxTurningAngle(trajectory, theta_Tmax), "native") || ~prod(maxClimbingDivingAngle(trajectory(1:2,:), theta_Cmax), "native")
-        objective = inf;
-    else
-        objective = omega_d * F_d(trajectory) + omega_c * F_c(particle, CT) + (1-omega_c-omega_d) * F_a(trajectory, N_W);
-    endif
+function objective = F (swarm, xIntervals, threat_source, theta_Tmax, theta_Cmax, omega_d, omega_c, CT, N_W)
+## input format: swarm = [y11, y12, ..., y1N; y21, y22, ..., y2N; ...; yG_n1, yG_n2, ..., yG_nN]; xIntervals = [x1, x2, ..., xN]
+## output format: objective is a G_n by 1 matrix
+    trajectory = swarm2Trajectory (swarm, xIntervals);
+    objective = zeros(rows(swarm),1);
+    for i = 1:rows(swarm)
+        % i
+        if threatConflict([xIntervals; swarm(i,:)], threat_source) || ~prod(maxTurningAngle(trajectory(:,:,i), theta_Tmax), "native") || ~prod(maxClimbingDivingAngle(trajectory(1:2,:,i), theta_Cmax), "native")
+            objective(i) = inf;
+        else
+            objective(i) = omega_d * F_d(trajectory(:,:,i)) + omega_c * F_c(swarm, CT, i) + (1-omega_c-omega_d) * F_a(trajectory(:,:,i), N_W);
+        endif
+        % objective(i)
+    endfor
 endfunction
