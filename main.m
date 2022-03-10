@@ -48,7 +48,7 @@
 
 function retval = main
     ## Step 1
-    n = 10;         # number of particles in a subgroup
+    n = 30;         # number of particles in a subgroup
     N = 10;         # number of way-points
     G_n = 5;        # number of subgroups
     startpoint = [0; 0];
@@ -62,12 +62,13 @@ function retval = main
     %     plot(xIntervals, swarm(:,:,i)')
     % endfor
     # constraints
-    theta_Tmax = 90;
+    theta_Tmax = 60;
     theta_Cmax = 45;
     threat_source = [6.2280, 17.781, 15.681, 6.5280, 22.581, 15.057, 21.036; 8.5230, 4.6080, 17.208, 13.629, 21.108, 11.835, 15.846; 2.2826, 1.9663, 2.8540, 2.0762, 1.9393, 2.4483, 2.4404];
     % threat_source = [30; 0; 1];
     # PSO parameters
-    maxgeneration = 3;
+    maxgeneration = 30;
+    check = [1, 10, 20, 30];
     omega = linspace(0.7, 0.4, maxgeneration);
     phi_p = 0.2;    # cognitive coefficient
     phi_g = 0.2;    # social coefficient
@@ -157,12 +158,32 @@ function retval = main
             endfor
         endfor
         
+        if any(check(:) == generation)
+            plotThreat_source (threat_source);
+            hold on
+            plot(xIntervals, solution)
+            hold off
+            G_obj
+        endif
         generation++;
-        figure
-        plot(xIntervals, solution)
-        G_obj
     endwhile
+ 
+endfunction
 
+function plotThreat_source (threat_source)
+    figure
+    hold on
+    for i = 1:columns(threat_source)
+        plotCircle(threat_source(:,i));
+    endfor
+    hold off
+endfunction
+
+function plotCircle (threat_source)
+    t = linspace(0,2*pi,100)'; 
+    circsx = threat_source(3).*cos(t) + threat_source(1); 
+    circsy = threat_source(3).*sin(t) + threat_source(2); 
+    plot(circsx,circsy); 
 endfunction
 
 function adjustedparticle = particleAdjust (particle)
@@ -173,7 +194,7 @@ function adjustedparticle = particleAdjust (particle)
             particle(i+1) = particle(i) + (particle(i+j-1) - particle(i))/(j-1)*rand();
             adjustedparticle = particleAdjust(particle);
         else
-            particle(i:end) = particle(i);
+            particle(i:end-1) = particle(i);
             adjustedparticle = particle;
         endif
     else
@@ -195,7 +216,7 @@ endfunction
 
 function swarm = swarmInit (startpoint, endpoint, position_range, n, N, G_n)
 ## input format: swarm size = n by N by G_n
-    swarm = rand(n, N, G_n)*10 - 5 + linspace(startpoint(2),endpoint(2),N);
+    swarm = rand(n, N, G_n)*20 - 10 + linspace(startpoint(2),endpoint(2),N);
     swarm(:,1,:) = startpoint(2);
     swarm(:,end,:) = endpoint(2);
     swarm = swarm - (swarm < position_range(1)) .* swarm - (swarm > position_range(2)) .* swarm + (swarm > position_range(2))*position_range(2);
