@@ -48,7 +48,7 @@
 
 function retval = main
     ## Step 1
-    n = 30;         # number of particles in a subgroup
+    n = 10;         # number of particles in a subgroup
     N = 10;         # number of way-points
     G_n = 5;        # number of subgroups
     startpoint = [0; 0];
@@ -57,18 +57,15 @@ function retval = main
     xIntervals = linspace(startpoint(1),endpoint(1),N);
     # swarm initialization
     swarm = swarmInit(startpoint, endpoint, position_range, n, N, G_n);
-    % for i = 1:size(swarm,3)
-    %     figure
-    %     plot(xIntervals, swarm(:,:,i)')
-    % endfor
     # constraints
     theta_Tmax = 60;
     theta_Cmax = 45;
     threat_source = [6.2280, 17.781, 15.681, 6.5280, 22.581, 15.057, 21.036; 8.5230, 4.6080, 17.208, 13.629, 21.108, 11.835, 15.846; 2.2826, 1.9663, 2.8540, 2.0762, 1.9393, 2.4483, 2.4404];
-    % threat_source = [30; 0; 1];
+    threat_source = [15; 15; 5];
     # PSO parameters
-    maxgeneration = 30;
-    check = [1, 10, 20, 30];
+    maxgeneration = 50;
+    check = [1, 10, 20, 30, 40, 50];
+    plotindex = 1;
     omega = linspace(0.7, 0.4, maxgeneration);
     phi_p = 0.2;    # cognitive coefficient
     phi_g = 0.2;    # social coefficient
@@ -91,7 +88,28 @@ function retval = main
     # The solution is apparently the best particle from each group
     solution = shiftdim(G_pos,1)';
 
+    figure
     while generation <= maxgeneration
+        # Visualization
+        if any(check(:) == generation)
+            generation
+            for i = 1:G_n
+                subplot(columns(check),G_n+1,plotindex)
+                plotThreat_source(threat_source);
+                hold on
+                plot(xIntervals,swarm(:,:,i)');
+                hold off
+                plotindex++;
+            endfor
+            subplot(columns(check),G_n+1,plotindex)
+            plotThreat_source(threat_source);
+            hold on
+            plot(xIntervals, solution)
+            hold off
+            G_obj
+            plotindex++;
+        endif
+
         # calculate the objective of this iteration of swarm
         P_objective = F(swarm, xIntervals, solution, threat_source, theta_Tmax, theta_Cmax, omega_d, omega_c, CT, N_W);
         # refresh P_pos and P_obj
@@ -147,7 +165,9 @@ function retval = main
                 endfor
             endfor
         endfor
-        # submit to the position range constraint
+        # submit to the start-end point and position range constraint
+        swarm(:,1,:) = startpoint(2);
+        swarm(:,end,:) = endpoint(2);
         swarm = swarm - (swarm < position_range(1)) .* swarm - (swarm > position_range(2)) .* swarm + (swarm > position_range(2))*position_range(2);
 
         ## Step 5
@@ -158,20 +178,12 @@ function retval = main
             endfor
         endfor
         
-        if any(check(:) == generation)
-            plotThreat_source (threat_source);
-            hold on
-            plot(xIntervals, solution)
-            hold off
-            G_obj
-        endif
         generation++;
     endwhile
  
 endfunction
 
 function plotThreat_source (threat_source)
-    figure
     hold on
     for i = 1:columns(threat_source)
         plotCircle(threat_source(:,i));
