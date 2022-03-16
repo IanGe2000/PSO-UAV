@@ -63,9 +63,9 @@ function retval = main
     threat_source = [6.2280, 17.781, 15.681, 6.5280, 22.581, 15.057, 21.036; 8.5230, 4.6080, 17.208, 13.629, 21.108, 11.835, 15.846; 2.2826, 1.9663, 2.8540, 2.0762, 1.9393, 2.4483, 2.4404];
     % threat_source = [15; 15; 5];
     # PSO parameters
-    maxgeneration = 5;
-    check = [1, 2, 3, 4, 5];
-    plotindex = 1;
+    maxgeneration = 20;
+    check = [1, 4, 10, 15, 20];
+    subplotrowindex = 1;
     P_c = 0.85;
     omega = linspace(0.7, 0.4, maxgeneration);
     phi_p = 0.2;    # cognitive coefficient
@@ -90,26 +90,25 @@ function retval = main
     solution = shiftdim(G_pos,1)';
 
     figure
+    printf("Initial generation:\n")
+    printf("row 1: the initial swarm\n");
+    for i = 1:G_n
+        subplot(columns(check)+1,G_n+1,(subplotrowindex-1)*(G_n+1)+i)
+        plotThreat_source(threat_source);
+        hold on
+        plot(xIntervals,swarm(:,:,i)');
+        hold off
+    endfor
+    subplot(columns(check)+1,G_n+1,subplotrowindex*(G_n+1))
+    plotThreat_source(threat_source);
+    hold on
+    plot(xIntervals, solution)
+    hold off
+    G_obj
+    subplotrowindex++;
+
     while generation <= maxgeneration
-        # Visualization
-        if any(check(:) == generation)
-            generation
-            for i = 1:G_n
-                subplot(columns(check),G_n+1,plotindex)
-                plotThreat_source(threat_source);
-                hold on
-                plot(xIntervals,swarm(:,:,i)');
-                hold off
-                plotindex++;
-            endfor
-            subplot(columns(check),G_n+1,plotindex)
-            plotThreat_source(threat_source);
-            hold on
-            plot(xIntervals, solution)
-            hold off
-            G_obj
-            plotindex++;
-        endif
+        printf("enter generation %d:\n", generation);
 
         # calculate the objective of this iteration of swarm
         P_objective = F(swarm, xIntervals, solution, threat_source, theta_Tmax, theta_Cmax, omega_d, omega_c, CT, N_W);
@@ -152,6 +151,8 @@ function retval = main
             endfor
         endif
 
+        G_obj
+
         ## Step 4
         # update velocity and position of the swarm
         # modification: uses random C/D switching PSO with convergence ratio P_c for velocity update
@@ -162,8 +163,14 @@ function retval = main
                 continue
             endif
             xi = rand();
+            # force operator D when no feasable solution is found in this group
+            if G_obj(1,1,i) == inf
+                xi = 2;
+            endif
             if xi <= P_c
                 printf("Operator C\n");
+            elseif xi == 2
+                printf("Operator D (forced)\n");
             else
                 printf("Operator D\n");
             endif
@@ -195,10 +202,34 @@ function retval = main
                 swarm(j,:,i) = particleAdjust(swarm(j,:,i));
             endfor
         endfor
-        
+
+        # Visualization
+        if any(check(:) == generation)
+            printf("row %d: generation %d\n", subplotrowindex, generation);
+            for i = 1:G_n
+                subplot(columns(check)+1,G_n+1,(subplotrowindex-1)*(G_n+1)+i)
+                plotThreat_source(threat_source);
+                hold on
+                plot(xIntervals,swarm(:,:,i)');
+                hold off
+            endfor
+            subplot(columns(check)+1,G_n+1,subplotrowindex*(G_n+1))
+            plotThreat_source(threat_source);
+            hold on
+            plot(xIntervals, solution)
+            hold off
+            subplotrowindex++;
+        endif
+
         generation++;
     endwhile
- 
+    
+    figure
+    plotThreat_source(threat_source);
+    hold on
+    plot(xIntervals, solution)
+    hold off
+
 endfunction
 
 function plotThreat_source (threat_source)
@@ -246,7 +277,7 @@ endfunction
 
 function swarm = swarmInit (startpoint, endpoint, position_range, n, N, G_n)
 ## input format: swarm size = n by N by G_n
-    swarm = rand(n, N, G_n)*20 - 10 + linspace(startpoint(2),endpoint(2),N);
+    swarm = rand(n, N, G_n)*10 - 5 + linspace(startpoint(2),endpoint(2),N);
     swarm(:,1,:) = startpoint(2);
     swarm(:,end,:) = endpoint(2);
     swarm = swarm - (swarm < position_range(1)) .* swarm - (swarm > position_range(2)) .* swarm + (swarm > position_range(2))*position_range(2);
