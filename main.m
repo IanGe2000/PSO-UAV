@@ -61,11 +61,12 @@ function retval = main
     theta_Tmax = 60;
     theta_Cmax = 45;
     threat_source = [6.2280, 17.781, 15.681, 6.5280, 22.581, 15.057, 21.036; 8.5230, 4.6080, 17.208, 13.629, 21.108, 11.835, 15.846; 2.2826, 1.9663, 2.8540, 2.0762, 1.9393, 2.4483, 2.4404];
-    threat_source = [15; 15; 5];
+    % threat_source = [15; 15; 5];
     # PSO parameters
-    maxgeneration = 50;
-    check = [1, 10, 20, 30, 40, 50];
+    maxgeneration = 5;
+    check = [1, 2, 3, 4, 5];
     plotindex = 1;
+    P_c = 0.85;
     omega = linspace(0.7, 0.4, maxgeneration);
     phi_p = 0.2;    # cognitive coefficient
     phi_g = 0.2;    # social coefficient
@@ -153,14 +154,31 @@ function retval = main
 
         ## Step 4
         # update velocity and position of the swarm
+        # modification: uses random C/D switching PSO with convergence ratio P_c for velocity update
         for i = 1:size(velocity,3)
+            printf("Group %d: ", i);
             if any(missingindex(:) == i)
                 # if the subgroup is just reset, its P_pos and G_pos is not valid, skip the update
                 continue
             endif
+            xi = rand();
+            if xi <= P_c
+                printf("Operator C\n");
+            else
+                printf("Operator D\n");
+            endif
             for j = 1:rows(velocity)
                 for k = 1:columns(velocity)
-                    velocity(j,k,i) = omega(generation)*velocity(j,k,i) + phi_p*rand()*(P_pos(j,k,i)-swarm(j,k,i)) + phi_g*rand()*(G_pos(1,k,i)-swarm(j,k,i));
+                    r1 = rand();
+                    r2 = rand();
+                    if xi <= P_c
+                        # Operator C
+                        velocity(j,k,i) = omega(generation)*velocity(j,k,i) + phi_p*r1*(P_pos(j,k,i)-swarm(j,k,i)) + (0.5*r2+0.5)*(2*omega(generation)+2-phi_g*r2)*(G_pos(1,k,i)-swarm(j,k,i));
+                    else
+                        # Operator D
+                        velocity(j,k,i) = 1.05*velocity(j,k,i) + phi_p*r1*(P_pos(j,k,i)-swarm(j,k,i)) + phi_g*r2*(G_pos(1,k,i)-swarm(j,k,i));
+                    endif
+                    % velocity(j,k,i) = omega(generation)*velocity(j,k,i) + phi_p*rand()*(P_pos(j,k,i)-swarm(j,k,i)) + phi_g*rand()*(G_pos(1,k,i)-swarm(j,k,i));
                     swarm(j,k,i) = swarm(j,k,i) + velocity(j,k,i);
                 endfor
             endfor
