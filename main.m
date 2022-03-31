@@ -63,8 +63,8 @@ function retval = main
     threat_source = [6.2280, 17.781, 15.681, 6.5280, 22.581, 15.057, 21.036; 8.5230, 4.6080, 17.208, 13.629, 21.108, 11.835, 15.846; 2.2826, 1.9663, 2.8540, 2.0762, 1.9393, 2.4483, 2.4404];
     % threat_source = [15; 15; 5];
     # PSO parameters
-    maxgeneration = 20;
-    check = [1, 4, 10, 15, 20];
+    maxgeneration = 30;
+    check = [5, 10, 15, 20, 30];
     subplotrowindex = 1;
     P_c = 0.85;
     omega = linspace(0.7, 0.4, maxgeneration);
@@ -105,6 +105,9 @@ function retval = main
     plot(xIntervals, solution)
     hold off
     G_obj
+    G_obj_log = zeros(G_n, maxgeneration);
+    G_obj_log(:,1) = reshape(G_obj,G_n,1);
+    % G_obj_log
     subplotrowindex++;
 
     while generation <= maxgeneration
@@ -152,6 +155,7 @@ function retval = main
         endif
 
         G_obj
+        G_obj_log(:,generation) = reshape(G_obj,G_n,1);
 
         ## Step 4
         # update velocity and position of the swarm
@@ -230,6 +234,8 @@ function retval = main
     plot(xIntervals, solution)
     hold off
 
+    figure
+    plot(G_obj_log')
 endfunction
 
 function plotThreat_source (threat_source)
@@ -277,7 +283,7 @@ endfunction
 
 function swarm = swarmInit (startpoint, endpoint, position_range, n, N, G_n)
 ## input format: swarm size = n by N by G_n
-    swarm = rand(n, N, G_n)*10 - 5 + linspace(startpoint(2),endpoint(2),N);
+    swarm = rand(n, N, G_n)*30 - 15 + linspace(startpoint(2),endpoint(2),N);
     swarm(:,1,:) = startpoint(2);
     swarm(:,end,:) = endpoint(2);
     swarm = swarm - (swarm < position_range(1)) .* swarm - (swarm > position_range(2)) .* swarm + (swarm > position_range(2))*position_range(2);
