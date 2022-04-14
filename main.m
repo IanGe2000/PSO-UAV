@@ -49,10 +49,12 @@
 function retval = main
     ## Step 1
     n = 10;         # number of particles in a subgroup
-    N = 25;         # number of way-points
+    N = 10;         # number of way-points
     G_n = 5;        # number of subgroups
     startpoint = [0; 0];
     endpoint = [30; 30];
+    startpoint = [-4; 0];
+    endpoint = [0; 4];
     position_range = [min([startpoint, endpoint](2,:)), max([startpoint, endpoint](2,:))];
     xIntervals = linspace(startpoint(1),endpoint(1),N);
     # swarm initialization
@@ -60,8 +62,9 @@ function retval = main
     # constraints
     theta_Tmax = 60;
     theta_Cmax = 45;
-    threat_source = [6.2280, 17.781, 15.681, 6.5280, 22.581, 15.057, 21.036; 8.5230, 4.6080, 17.208, 13.629, 21.108, 11.835, 15.846; 2.2826, 1.9663, 2.8540, 2.0762, 1.9393, 2.4483, 2.4404];
-    % threat_source = [0;0;0];
+    % threat_source = [6.2280, 17.781, 15.681, 6.5280, 22.581, 15.057, 21.036; 8.5230, 4.6080, 17.208, 13.629, 21.108, 11.835, 15.846; 2.2826, 1.9663, 2.8540, 2.0762, 1.9393, 2.4483, 2.4404];
+    % threat_source = [-3.1; 3.2; 0.4];
+    % threat_source = [6.77, 13.57, 10.13, 16.81, 14.04, 23.45; 23.07, 22.65, 17.48, 15.55, 11.22, 8.95; 1.93, 2.47, 1.49, 1.88, 2.52, 2.25];
     # PSO parameters
     maxgeneration = 100;
     check = [5, 10, 30, 50, 100];
@@ -423,28 +426,28 @@ function pathDistance = F_d (varargin)
     pathDistance = num/den;
 endfunction
 
-function z = altitude (way_point)
-    p1 = 0.1501;
-    p2 = 0.2311;
-    p3 = 0.7068;
-    p4 = 0.4860;
-    p5 = 0.6913;
-    p6 = 0.2621;
-    p7 = 0.4565;
-    x = way_point(1,:);
-    y = way_point(2,:);
-    z = sin(y+p1) + p2.*sin(x) + p3.*cos(p4.*sqrt(x.^2+y.^2)) + p5.*cos(y) + p6.*sin(p6.*sqrt(x.^2+y.^2)) + p7.*cos(y);
-endfunction
-
 % function z = altitude (way_point)
-%     a = 0.4;
-%     b = 2.6;
-%     d = 1.3;
-%     g = 2.4;
+%     p1 = 0.1501;
+%     p2 = 0.2311;
+%     p3 = 0.7068;
+%     p4 = 0.4860;
+%     p5 = 0.6913;
+%     p6 = 0.2621;
+%     p7 = 0.4565;
 %     x = way_point(1,:);
 %     y = way_point(2,:);
-%     z = a.*cos(b.*sqrt(x.^2+y.^2))+d.*sin(g.*sqrt(x.^2+y.^2));
+%     z = sin(y+p1) + p2.*sin(x) + p3.*cos(p4.*sqrt(x.^2+y.^2)) + p5.*cos(y) + p6.*sin(p6.*sqrt(x.^2+y.^2)) + p7.*cos(y);
 % endfunction
+
+function z = altitude (way_point)
+    a = 0.4;
+    b = 2.6;
+    d = 1.3;
+    g = 2.4;
+    x = way_point(1,:);
+    y = way_point(2,:);
+    z = a.*cos(b.*sqrt(x.^2+y.^2))+d.*sin(g.*sqrt(x.^2+y.^2));
+endfunction
 
 function bool = threatConflict (course, threat_source)
 ## output format: bool = true if the course conflicts with any threat_source
