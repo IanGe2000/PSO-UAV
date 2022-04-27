@@ -18,3 +18,4 @@ enum distance_error
 void errorHandler(distance_error);
 RowVectorXd distance(MatrixXd, distance_opt = recursive);
 MatrixXd distance(MatrixXd, MatrixXd, distance_opt = parallel);
+MatrixXd distance(MatrixXd, MatrixXd, MatrixXd, distance_opt = parallel);
