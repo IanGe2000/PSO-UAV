@@ -1,4 +1,4 @@
-#include "distance.h"
+#include "utilities.h"
 
 std::string error_decoder[] = { "unsupported_opt", "dimensions_mismatch", "only_point_to_line_distance_supported"};
 
@@ -116,5 +116,39 @@ MatrixXd distance(MatrixXd X, MatrixXd A, MatrixXd B, distance_opt opt)
 	default:
 		errorHandler(unsupported_opt);
 		break;
+	}
+}
+
+MatrixXd diff(MatrixXd X)
+{
+	return diff(X, 1);
+}
+
+MatrixXd diff(MatrixXd X, int K)
+{
+	if (X.cols() > 1)
+		return diff(X, K, 1);
+	else if (X.rows() > 1)
+		return diff(X, K, 2);
+	else
+	{
+		Matrix<double, 0, 0> N;
+		return N;
+	}
+}
+
+MatrixXd diff(MatrixXd X, int K, int DIM)
+{
+	if (K == 0)
+		return X;
+	else if (K >= 1)
+	{
+		if (X.cols() > 1)
+		{
+			MatrixXd D(X.rows(), X.cols() - 1);
+			D = X(placeholders::all, seq(0, placeholders::last - 1)) - X(placeholders::all, seq(1, placeholders::last));
+			return diff(D, K - 1, DIM);
+		}
+		
 	}
 }

@@ -7,6 +7,6 @@ cmake_minimum_required (VERSION 3.8)
 include_directories("../..")
 
 # Add source to this project's executable.
-add_executable (CXX_simulation "CXX_simulation.cpp" "CXX_simulation.h" "distance.cpp" "distance.h")
+add_executable (CXX_simulation "CXX_simulation.cpp" "CXX_simulation.h" "utilities.cpp" "utilities.h" "particle_swarm.cpp" "particle_swarm.h")
 
 # TODO: Add tests and install targets if needed.

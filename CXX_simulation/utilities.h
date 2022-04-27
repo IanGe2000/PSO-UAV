@@ -3,8 +3,6 @@
 #include <string>
 #include "CXX_simulation.h"
 
-using namespace Eigen;
-
 enum distance_opt
 {
 	parallel, mesh, recursive
@@ -19,3 +17,8 @@ void errorHandler(distance_error);
 RowVectorXd distance(MatrixXd, distance_opt = recursive);
 MatrixXd distance(MatrixXd, MatrixXd, distance_opt = parallel);
 MatrixXd distance(MatrixXd, MatrixXd, MatrixXd, distance_opt = parallel);
+
+MatrixXd diff(MatrixXd);
+MatrixXd diff(MatrixXd, int);
+MatrixXd diff(MatrixXd, int, int);
+
