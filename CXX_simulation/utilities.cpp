@@ -1,10 +1,10 @@
 #include "utilities.h"
 
-std::string error_decoder[] = { "unsupported_opt", "dimensions_mismatch", "only_point_to_line_distance_supported"};
+std::string error_decoder[] = { "unsupported_opt", "dimensions_mismatch", "only_point_to_line_distance_supported", "K_must_be_positive", "DIM_must_be_1_or_2"};
 
-void errorHandler(distance_error error)
+void errorHandler(utilities_error error)
 {
-	std::cout << "distance: " << error_decoder[error] << std::endl;
+	std::cout << "utilities: " << error_decoder[error] << std::endl;
 	exit(1);
 }
 
@@ -126,10 +126,10 @@ MatrixXd diff(MatrixXd X)
 
 MatrixXd diff(MatrixXd X, int K)
 {
-	if (X.cols() > 1)
+	if (X.rows() > K)
 		return diff(X, K, 1);
-	else if (X.rows() > 1)
-		return diff(X, K, 2);
+	else if (X.cols() > K - X.rows() + 1)
+		return diff(X, K - X.rows() + 1, 2);
 	else
 	{
 		Matrix<double, 0, 0> N;
@@ -143,12 +143,26 @@ MatrixXd diff(MatrixXd X, int K, int DIM)
 		return X;
 	else if (K >= 1)
 	{
-		if (X.cols() > 1)
+		if (DIM == 1 && X.rows() > 1)
 		{
-			MatrixXd D(X.rows(), X.cols() - 1);
-			D = X(placeholders::all, seq(0, placeholders::last - 1)) - X(placeholders::all, seq(1, placeholders::last));
+			MatrixXd D(X.rows() - 1, X.cols());
+			D = X(seq(1, placeholders::last), placeholders::all) - X(seq(0, placeholders::last - 1), placeholders::all);
 			return diff(D, K - 1, DIM);
 		}
-		
+		else if (DIM == 2 && X.cols() > 1)
+		{
+			MatrixXd D(X.rows(), X.cols() - 1);
+			D = X(placeholders::all, seq(1, placeholders::last)) - X(placeholders::all, seq(0, placeholders::last - 1));
+			return diff(D, K - 1, DIM);
+		}
+		else if (DIM != 1 && DIM != 2)
+			errorHandler(DIM_must_be_1_or_2);
+		else
+		{
+			Matrix<double, 0, 0> N;
+			return N;
+		}
 	}
+	else
+		errorHandler(K_must_be_positive);
 }

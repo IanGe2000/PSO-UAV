@@ -8,12 +8,13 @@ enum distance_opt
 	parallel, mesh, recursive
 };
 
-enum distance_error
+enum utilities_error
 {
-	unsupported_opt, dimensions_mismatch, only_point_to_line_distance_supported
+	unsupported_opt, dimensions_mismatch, only_point_to_line_distance_supported, K_must_be_positive, DIM_must_be_1_or_2
 };
 
-void errorHandler(distance_error);
+void errorHandler(utilities_error);
+
 RowVectorXd distance(MatrixXd, distance_opt = recursive);
 MatrixXd distance(MatrixXd, MatrixXd, distance_opt = parallel);
 MatrixXd distance(MatrixXd, MatrixXd, MatrixXd, distance_opt = parallel);
