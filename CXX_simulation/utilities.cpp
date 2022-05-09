@@ -1,10 +1,10 @@
 #include "utilities.h"
 
-std::string error_decoder[] = { "unsupported_opt", "dimensions_mismatch", "only_point_to_line_distance_supported", "K_must_be_positive", "DIM_must_be_1_or_2"};
+std::string error_decoder[] = { "unsupported_opt", "dimensions_mismatch", "only_point_to_line_distance_supported", "K_must_be_positive", "DIM_must_be_1_or_2", "index_out_of_bound"};
 
 void errorHandler(utilities_error error)
 {
-	std::cout << "utilities: " << error_decoder[error] << std::endl;
+	std::cout << "utilities/errorHandler: " << error_decoder[error] << std::endl;
 	exit(1);
 }
 

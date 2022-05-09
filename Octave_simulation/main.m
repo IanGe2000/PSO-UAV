@@ -426,28 +426,28 @@ function pathDistance = F_d (varargin)
     pathDistance = num/den;
 endfunction
 
-% function z = altitude (way_point)
-%     p1 = 0.1501;
-%     p2 = 0.2311;
-%     p3 = 0.7068;
-%     p4 = 0.4860;
-%     p5 = 0.6913;
-%     p6 = 0.2621;
-%     p7 = 0.4565;
-%     x = way_point(1,:);
-%     y = way_point(2,:);
-%     z = sin(y+p1) + p2.*sin(x) + p3.*cos(p4.*sqrt(x.^2+y.^2)) + p5.*cos(y) + p6.*sin(p6.*sqrt(x.^2+y.^2)) + p7.*cos(y);
-% endfunction
-
 function z = altitude (way_point)
-    a = 0.4;
-    b = 2.6;
-    d = 1.3;
-    g = 2.4;
+    p1 = 0.1501;
+    p2 = 0.2311;
+    p3 = 0.7068;
+    p4 = 0.4860;
+    p5 = 0.6913;
+    p6 = 0.2621;
+    p7 = 0.4565;
     x = way_point(1,:);
     y = way_point(2,:);
-    z = a.*cos(b.*sqrt(x.^2+y.^2))+d.*sin(g.*sqrt(x.^2+y.^2));
+    z = sin(y+p1) + p2.*sin(x) + p3.*cos(p4.*sqrt(x.^2+y.^2)) + p5.*cos(y) + p6.*sin(p6.*sqrt(x.^2+y.^2)) + p7.*cos(y);
 endfunction
+
+% function z = altitude (way_point)
+%     a = 0.4;
+%     b = 2.6;
+%     d = 1.3;
+%     g = 2.4;
+%     x = way_point(1,:);
+%     y = way_point(2,:);
+%     z = a.*cos(b.*sqrt(x.^2+y.^2))+d.*sin(g.*sqrt(x.^2+y.^2));
+% endfunction
 
 function bool = threatConflict (course, threat_source)
 ## output format: bool = true if the course conflicts with any threat_source

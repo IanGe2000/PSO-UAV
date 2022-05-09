@@ -10,7 +10,7 @@ enum distance_opt
 
 enum utilities_error
 {
-	unsupported_opt, dimensions_mismatch, only_point_to_line_distance_supported, K_must_be_positive, DIM_must_be_1_or_2
+	unsupported_opt, dimensions_mismatch, only_point_to_line_distance_supported, K_must_be_positive, DIM_must_be_1_or_2, index_out_of_bound
 };
 
 void errorHandler(utilities_error);

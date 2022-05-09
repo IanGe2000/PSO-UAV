@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-//#define USER_EIGEN
+#define USER_EIGEN
 
 #ifdef USER_EIGEN
 #include <Eigen/Dense>
@@ -13,3 +13,4 @@
 #endif
 
 using namespace Eigen;
+
