@@ -18,13 +18,17 @@ RowVectorXd distance(MatrixXd X, distance_opt opt)
 
 MatrixXd distance(MatrixXd X, MatrixXd Y, distance_opt opt)
 {
+	//std::cout << "X: " << X << "\n\nY: " << Y << "\n\n";
 	switch (opt)
 	{
 	case parallel:
+		//std::cout << "parallel\n";
 		if (X.rows() != Y.rows() || X.cols() != Y.cols())
 			errorHandler(dimensions_mismatch);
-		else
+		else {
+			//std::cout << (X - Y).array().square().colwise().sum().sqrt() << "\n\n";
 			return (X - Y).array().square().colwise().sum().sqrt();
+		}
 		break;
 	case mesh:
 		if (X.rows() != Y.rows())
@@ -43,6 +47,7 @@ MatrixXd distance(MatrixXd X, MatrixXd Y, distance_opt opt)
 		}
 		break;
 	case recursive:
+		//std::cout << "recursive\n";
 		if (X.rows() != 2 || Y.rows() != 2)
 			errorHandler(only_point_to_line_distance_supported);
 		else
@@ -56,10 +61,13 @@ MatrixXd distance(MatrixXd X, MatrixXd Y, distance_opt opt)
 				for (int j = 0; j < result.cols(); j++)
 				{
 					num << X(0, j) - X(0, j + 1), X(1, j) - X(1, j + 1), Y(0, i) - X(0, j + 1), Y(1, i) - X(1, j + 1);
+					//std::cout << "num: " << num << "\n\n";
 					det << num.determinant();
+					//std::cout << "det: " << det << "\n\n";
 					result(i, j) = det.abs()(0) / distance((MatrixXd)X(placeholders::all, j), (MatrixXd)X(placeholders::all, j + 1))(0);
 				}
 			}
+			//std::cout << result << "\n\n";
 			return result;
 		}
 		break;

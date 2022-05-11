@@ -5,15 +5,10 @@
 
 int main()
 {
-	Tensor<double, 3> swarm(2, 2, 5);
-	swarm.setValues({ {{0,0,0,2,3},{0,0,0,2,3}},{{0,0,0,2,3},{0,0,0,2,3}} });
-	std::cout << swarm << "\n\n";
-
-	RowVectorXd xInt(1, 5);
-	xInt << 0, 1, 2, 3, 4;
-	std::cout << xInt << "\n\n";
-
-	Tensor<double, 4> trajectory = swarm2Trajectory(swarm, xInt);
-	std::cout << trajectory << "\n\n";
+	Matrix<double, 2, 2> a;
+	a << 1,2.3, 2, 3;
+	Array<bool, 2, 2> b;
+	b = a.array() < 3.01;
+	std::cout << !b.all();
 	return 0;
 }

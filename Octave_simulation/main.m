@@ -456,8 +456,8 @@ function bool = threatConflict (course, threat_source)
     d2 = distance(course, threat_source(1:2,:), 'mesh');        ## distance from each threat_source to each way-point   ## (N by T)
     d3 = distance(course);                                      ## length of each slice                                 ## (1 by N-1)
 
-    booltable1 = d2<threat_source(3,:);         ## if each way-point is within the range of each threat_source
-    booltable1 = (booltable1 | shift(booltable1,-1,1))(1:end-1,:)';     ## if either way-point of each slice is within the range of each threat_source  ## (T by N-1)
+    booltable0 = d2<threat_source(3,:);         ## if each way-point is within the range of each threat_source
+    booltable1 = (booltable0 | shift(booltable0,-1,1))(1:end-1,:)';     ## if either way-point of each slice is within the range of each threat_source  ## (T by N-1)
     booltable2 = d1>threat_source(3,:)';        ## if the distance from each threat_source to each slice is greater than the source's radius            ## (T by N-1)
     booltable3 = d3.^2>abs(diff(d2.^2))';       ## if c^2>|a^2-b^2|                                                                                     ## (T by N-1)
 
