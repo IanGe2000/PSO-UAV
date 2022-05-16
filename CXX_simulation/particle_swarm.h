@@ -6,6 +6,7 @@ RowVectorXd particleAdjust(RowVectorXd);
 Tensor<double, 3> swarmInit(RowVector2d, int, int, int);
 Tensor<double, 3> swarmInit(Tensor<double, 3>, int);
 Tensor<double, 3> swarmInit(Tensor<double, 3>, ArrayXi);
+Tensor<double, 3> velocityInit(RowVector2d, int, int, int);
 Matrix3Xd particle2Trajectory(RowVectorXd, RowVectorXd);
 Tensor<double, 4> swarm2Trajectory(Tensor<double, 3>, RowVectorXd);
 Matrix2Xd particle2Course(RowVectorXd, RowVectorXd);
@@ -19,4 +20,4 @@ double F_a(Matrix3Xd, int);
 double climbingDivingAngle(Matrix2d);
 Array<bool, 1, Dynamic> maxClimbingDivingAngle(Matrix2Xd, double);
 Tensor<double, 3> F(Tensor<double, 3>, RowVectorXd, MatrixXd, Matrix3Xd, double, double, double, double, double, int);
-
+int fakeMain();

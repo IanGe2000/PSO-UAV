@@ -23,3 +23,4 @@ MatrixXd diff(MatrixXd);
 MatrixXd diff(MatrixXd, int);
 MatrixXd diff(MatrixXd, int, int);
 
+ArrayXi repeatedRow(MatrixXd);

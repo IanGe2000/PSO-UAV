@@ -62,7 +62,7 @@ function retval = main
     # constraints
     theta_Tmax = 60;
     theta_Cmax = 45;
-    % threat_source = [6.2280, 17.781, 15.681, 6.5280, 22.581, 15.057, 21.036; 8.5230, 4.6080, 17.208, 13.629, 21.108, 11.835, 15.846; 2.2826, 1.9663, 2.8540, 2.0762, 1.9393, 2.4483, 2.4404];
+    threat_source = [6.2280, 17.781, 15.681, 6.5280, 22.581, 15.057, 21.036; 8.5230, 4.6080, 17.208, 13.629, 21.108, 11.835, 15.846; 2.2826, 1.9663, 2.8540, 2.0762, 1.9393, 2.4483, 2.4404];
     % threat_source = [-3.1; 3.2; 0.4];
     % threat_source = [6.77, 13.57, 10.13, 16.81, 14.04, 23.45; 23.07, 22.65, 17.48, 15.55, 11.22, 8.95; 1.93, 2.47, 1.49, 1.88, 2.52, 2.25];
     # PSO parameters
@@ -112,7 +112,7 @@ function retval = main
     G_obj_log(:,1) = reshape(G_obj,G_n,1);
     % G_obj_log
     subplotrowindex++;
-
+    
     while generation <= maxgeneration
         printf("enter generation %d:\n", generation);
 

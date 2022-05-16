@@ -5,10 +5,14 @@
 
 int main()
 {
-	Matrix<double, 2, 2> a;
-	a << 1,2.3, 2, 3;
-	Array<bool, 2, 2> b;
-	b = a.array() < 3.01;
-	std::cout << !b.all();
+	Array<double, 3, 3> xi = Array<double, 3, 3>::Random();
+	std::cout << xi;
+	//for (int i = 0; i < 7; i++)
+	//{
+	//	if ()
+	//		continue;
+	//	std::cout << i;
+	//}
+	//fakeMain();
 	return 0;
 }

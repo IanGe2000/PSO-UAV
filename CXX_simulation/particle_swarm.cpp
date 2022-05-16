@@ -80,6 +80,15 @@ Tensor<double, 3> swarmInit(Tensor<double, 3> swarm, ArrayXi reinit_group_indexe
 	return swarm;
 }
 
+Tensor<double, 3> velocityInit(RowVector2d velocity_range, int n, int N, int G_n)
+{
+	Tensor<double, 3> velocity(G_n, n, N);
+	velocity.setRandom();
+	double velocity_range_size = diff(velocity_range)(0);
+	velocity = velocity * (velocity_range_size) + velocity_range.minCoeff();
+	return velocity;
+}
+
 Matrix3Xd particle2Trajectory(RowVectorXd particle, RowVectorXd xIntervals)
 {
 	Matrix2Xd course(2, particle.cols());
@@ -247,9 +256,195 @@ Tensor<double, 3> F(Tensor<double, 3> swarm, RowVectorXd xIntervals, MatrixXd so
 			trajectory_temp = trajectory.slice(traj_offsets, traj_extents);
 			Map<Matrix3Xd> trajectory_m(trajectory_temp.data(), 3, N);
 			if (threatConflict(particle2Course(particle, xIntervals), threat_source) || !maxTurningAngle(trajectory_m, theta_Tmax).all() || !maxClimbingDivingAngle(trajectory_m(seq(0,1), placeholders::all), theta_Cmax).all())
-				objective(i, j, 0) = Infinity;
+				objective(i, j, 0) = std::numeric_limits<double>::infinity();
 			else
 				objective(i, j, 0) = omega_d * F_d(trajectory_m) + omega_c * F_c(particle, i, solution, CT) + (1 - omega_c - omega_d) * F_a(trajectory_m, N_W);
 		}
 	}
+
+	return objective;
+}
+
+int fakeMain()
+{
+	// Step 1 //
+	int n = 10;		//number of particles in a subgroup
+	int N = 10;		//number of way-points
+	int G_n = 5;	//number of subgroups
+	Matrix2d startendpoints{ {0, 30},{0, 30} };
+	std::cout << startendpoints << "\n\n";
+	Map<Matrix<double, 2, 1>> startpoint(startendpoints(placeholders::all, 0).data(), 2, 1);
+	Map<Matrix<double, 2, 1>> endpoint(startendpoints(placeholders::all, 1).data(), 2, 1);
+	std::cout << startpoint << "\n\n" << endpoint << "\n\n";
+	RowVector2d position_range;
+	position_range(0) = startendpoints(1, placeholders::all).minCoeff();
+	position_range(1) = startendpoints(1, placeholders::all).maxCoeff();
+	std::cout << position_range;
+	RowVectorXd xIntervals = VectorXd::LinSpaced(N, startendpoints(0, 0), startendpoints(0, 1));
+	// swarm initialization
+	Tensor<double, 3> swarm = swarmInit(position_range, n, N, G_n);
+	// constraints
+	double theta_Tmax = 60;
+	double theta_Cmax = 45;
+	Matrix3Xd threat_source
+	{
+		{6.2280, 17.781, 15.681, 6.5280, 22.581, 15.057, 21.036},
+		{8.5230, 4.6080, 17.208, 13.629, 21.108, 11.835, 15.846},
+		{2.2826, 1.9663, 2.8540, 2.0762, 1.9393, 2.4483, 2.4404}
+	};
+	int maxgeneration = 100;
+	double P_c = 0.85;
+	ArrayXd omega = ArrayXd::LinSpaced(maxgeneration, 0.7, 0.4);
+	double phi_p = 0.2;    // cognitive coefficient
+	double phi_g = 0.2;    // social coefficient
+	RowVector2d velocity_range{ {-6.0, 6.0} };
+	Tensor<double, 3> velocity = velocityInit(velocity_range, n, N, G_n);
+	// objective function weights
+	double omega_d = 0.3;
+	double omega_c = 0.5;
+	double CT = 4.5;
+	int N_W = N;
+
+	// Step 2 //
+	int generation = 1;
+	// Initialize the particle's best position to be the current swarm and the corresponding objective value to be inf
+	Tensor<double, 3> P_pos = swarm;
+	Tensor<double, 3> P_obj(G_n, n, 1);
+	P_obj.setConstant(std::numeric_limits<double>::infinity());
+	// Initialize the group best particle to be the 1st particle in its subgroup
+	array<Index, 3> offsets_3_swarm = { 0,0,0 };
+	array<Index, 3> extents_3_particle = { 1,1,N };
+	array<Index, 3> extents_3_one_particle_of_each_group = { G_n,1,N };
+	array<Index, 3> offsets_3_G_pos = { 0,0,0 };
+	array<Index, 3> extents_3_group = { 1,n,N };
+	array<Index, 3> extents_3_one_col_of_each_group = { G_n,n,1 };
+	Tensor<double, 3> G_pos = swarm.slice(offsets_3_swarm, extents_3_one_particle_of_each_group);
+	Tensor<double, 3> G_obj(G_n, 1, 1);
+	G_obj.setConstant(std::numeric_limits<double>::infinity());
+	// The solution is apparently the best particle from each group
+	Map<MatrixXd> solution(G_obj.data(), G_n, N);
+
+	MatrixXd G_obj_log(G_n, maxgeneration);
+	Map<MatrixXd> G_obj_temp(G_obj.data(), G_n, 1);
+	G_obj_log(placeholders::all, 0) = G_obj_temp;
+
+	while (generation <= maxgeneration)
+	{
+		std::cout << "enter generation " << generation << ":\n";
+
+		// calculate the objective of this iteration of swarm
+		Tensor<double, 3> P_objective = F(swarm, xIntervals, solution, threat_source, theta_Tmax, theta_Cmax, omega_d, omega_c, CT, N_W);
+		// refresh P_posand P_obj
+		Tensor<bool, 3> P_refresh = P_objective < P_obj;
+		for (int i = 0; i < G_n; i++)
+		{
+			for (int j = 0; j < n; j++)
+			{
+				if (P_refresh(i, j, 0))
+				{
+					// particle's best is refreshed
+					offsets_3_swarm = { i,j,0 };
+					P_pos.slice(offsets_3_swarm, extents_3_particle) = swarm.slice(offsets_3_swarm, extents_3_particle);
+					P_obj(i,j,0) = P_objective(i,j,0);
+				}
+			}
+		}
+
+		// Step 3 //
+		// refresh G_pos and G_obj
+		Tensor<int, 2> group_best_index = P_obj.argmin(1).cast<int>();
+		for (int i = 0; i <	G_n; i++)
+		{
+			if (P_obj(i, group_best_index(i), 0) < G_obj(i, 0, 0))
+			{
+				// group best is refreshed
+				offsets_3_swarm = { i, group_best_index(i), 0 };
+				offsets_3_G_pos = { i, 0, 0 };
+				G_pos.slice(offsets_3_G_pos, extents_3_particle) = swarm.slice(offsets_3_swarm, extents_3_particle);
+				G_obj(i, 0, 0) = P_obj(i, group_best_index(i), 0);
+			}
+		}
+		// regenerates the solution from G_pos
+		new (&solution) Map<MatrixXd> (G_obj.data(), G_n, N);
+		// check if there is any duplication of particles
+		ArrayXi reinit_group_indexes = repeatedRow(solution);
+		swarm = swarmInit(swarm, reinit_group_indexes);
+		for (int i = 0; i < reinit_group_indexes.rows(); i++)
+		{
+			offsets_3_swarm = { reinit_group_indexes(i), 0, 0 };
+			P_pos.slice(offsets_3_swarm, extents_3_group) = swarm.slice(offsets_3_swarm, extents_3_group);
+			P_obj(reinit_group_indexes(i), 0, 0) = std::numeric_limits<double>::infinity();
+			G_pos.slice(offsets_3_swarm, extents_3_particle) = swarm.slice(offsets_3_swarm, extents_3_particle);
+			G_obj(reinit_group_indexes(i), 0, 0) = std::numeric_limits<double>::infinity();
+		}
+
+		new (&G_obj_temp) Map<MatrixXd>(G_obj.data(), G_n, 1);
+		G_obj_log(placeholders::all, generation) = G_obj_temp;
+
+		// Step 4 //
+		// update velocity and position of the swarm
+		// modification: uses random C/D switching PSO with convergence ratio P_c for velocity update
+		for (int i = 0; i < G_n; i++)
+		{
+			if ((reinit_group_indexes == 2).any())
+				continue;
+			double xi = ArrayXd::Random().abs()(0);
+			// force operator D when no feasable solution is found in this group
+			if (G_obj(i, 0, 0) == std::numeric_limits<double>::infinity())
+				xi = 2;
+			if (xi <= P_c)
+				std::cout << "Operator C\n";
+			else if (xi == 2)
+				std::cout << "Operator D (forced)\n";
+			else
+				std::cout << "Operator D\n";
+			for (int j = 0; j < n; j++)
+			{
+				for (int k = 0; k < N; k++)
+				{
+					double r1 = ArrayXd::Random().abs()(0);
+					double r2 = ArrayXd::Random().abs()(0);
+					if (xi <= P_c)
+					{
+						// Operator C
+						velocity(i, j, k) = omega(generation - 1) * velocity(i, j, k) + phi_p * r1 * (P_pos(i, j, k) - swarm(i, j, k)) + (0.5 * r2 + 0.5) * (2 * omega(generation - 1) + 2 - phi_g * r2) * (G_pos(i, 0, k) - swarm(i, j, k));
+					}
+					else
+					{
+						// Operator D
+						velocity(i, j, k) = 1.05 * velocity(i, j, k) + phi_p * r1 * (P_pos(i, j, k) - swarm(i, j, k)) + phi_g * r2 * (G_pos(i, 1, k) - swarm(i, j, k));
+					}
+					swarm(i, j, k) = swarm(i, j, k) + velocity(i, j, k);
+					// submit to the start - end point and position range constraint
+					if (k == 0)
+						swarm(i, j, k) = startpoint(1);
+					else if (k == N - 1)
+						swarm(i, j, k) = endpoint(1);
+					if (swarm(i, j, k) < position_range(0))
+						swarm(i, j, k) = position_range(0);
+					else if (swarm(i, j, k) > position_range(1))
+						swarm(i, j, k) = position_range(1);
+				}
+			}
+		}
+		
+		// Step 5 //
+		// adjust the particles to satisfy y(i) <= y(i+1)
+		for (int i = 0; i < G_n; i++)
+		{
+			for (int j = 0; j < n; j++)
+			{
+				offsets_3_swarm = { i,j,0 };
+				Tensor<double, 3> swarm_temp(1, 1, N);
+				swarm_temp = swarm.slice(offsets_3_swarm, extents_3_particle);
+				Map<RowVectorXd> particle_T2M(swarm_temp.data(), 1, N);
+				TensorMap<Tensor<double, 3>> particle_M2T(particleAdjust(particle_T2M).data(), 1, 1, N);
+				swarm.slice(offsets_3_swarm, extents_3_particle) = particle_M2T;
+			}
+		}
+
+		generation++;
+	}
+
+	return 0;
 }

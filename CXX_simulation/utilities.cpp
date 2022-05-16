@@ -174,3 +174,37 @@ MatrixXd diff(MatrixXd X, int K, int DIM)
 	else
 		errorHandler(K_must_be_positive);
 }
+
+ArrayXi repeatedRow(MatrixXd solution)
+{
+	Matrix<bool, 1, Dynamic> row_status(1, solution.rows());
+	Matrix<int, 1, Dynamic> repeated_list(1, solution.rows());
+	row_status.setConstant(false);
+	repeated_list.setConstant(-1);
+	int list_length = 0;
+	//std::cout << row_status << "\n";
+	for (int i = 0; i < row_status.cols(); i++)
+	{
+		if (row_status(i))
+			continue;
+		//std::cout << "i = " << i << ":\n";
+		for (int j = i + 1; j < row_status.cols(); j++)
+		{
+			if (row_status(j))
+				continue;
+			//std::cout << "j = " << j << ": ";
+			if (solution(i, placeholders::all) == solution(j, placeholders::all))
+			{
+				//std::cout << " repeated, row_status = ";
+				repeated_list(list_length++) = j;
+				row_status(i) = true;
+				row_status(j) = true;
+				//std::cout << row_status;
+			}
+			//std::cout << "\n";
+		}
+	}
+	Map<ArrayXi> repeated_list_sliced(repeated_list.data(), list_length);
+	//std::cout << repeated_list << "\n\n";
+	return repeated_list_sliced;
+}
