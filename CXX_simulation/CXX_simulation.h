@@ -1,6 +1,8 @@
 ﻿#pragma once
 
+#include <fstream>
 #include <iostream>
+#include <ctime>
 
 #define USER_EIGEN
 

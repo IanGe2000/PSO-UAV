@@ -53,8 +53,8 @@ function retval = main
     G_n = 5;        # number of subgroups
     startpoint = [0; 0];
     endpoint = [30; 30];
-    startpoint = [-4; 0];
-    endpoint = [0; 4];
+    % startpoint = [-4; 0];
+    % endpoint = [0; 4];
     position_range = [min([startpoint, endpoint](2,:)), max([startpoint, endpoint](2,:))];
     xIntervals = linspace(startpoint(1),endpoint(1),N);
     # swarm initialization

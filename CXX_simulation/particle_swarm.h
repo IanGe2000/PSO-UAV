@@ -20,4 +20,6 @@ double F_a(Matrix3Xd, int);
 double climbingDivingAngle(Matrix2d);
 Array<bool, 1, Dynamic> maxClimbingDivingAngle(Matrix2Xd, double);
 Tensor<double, 3> F(Tensor<double, 3>, RowVectorXd, MatrixXd, Matrix3Xd, double, double, double, double, double, int);
-int fakeMain();
+int PSOMain(int, int, int, Matrix2d, double, double, Matrix3Xd, int, std::fstream*, std::fstream*);
+Matrix2Xd plotCircle(Matrix<double, 3, 1>);
+void plotThreat_source(Matrix3Xd, std::fstream*);

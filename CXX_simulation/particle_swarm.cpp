@@ -4,7 +4,7 @@ RowVectorXd particleAdjust(RowVectorXd particle)
 {
 	//std::cout << "In: " << particle << "\n\n";
 	Index i, k;
-	double v = (diff(particle).array() > 0).cast<double>().minCoeff(&k, &i);
+	double v = (diff(particle).array() >= 0).cast<double>().minCoeff(&k, &i);
 	//std::cout << "i = " << i << "\n\n";
 	if (v == 0)
 	{
@@ -27,7 +27,10 @@ RowVectorXd particleAdjust(RowVectorXd particle)
 		}
 	}
 	else
+	{
+		//std::cout << "Out(Done): " << particle << "\n\n";
 		return particle;
+	}
 }
 
 Tensor<double, 3> swarmInit(RowVector2d position_range, int n, int N, int G_n)
@@ -265,34 +268,34 @@ Tensor<double, 3> F(Tensor<double, 3> swarm, RowVectorXd xIntervals, MatrixXd so
 	return objective;
 }
 
-int fakeMain()
+int PSOMain(int n, int N, int G_n, Matrix2d startendpoints, double theta_Tmax, double theta_Cmax, Matrix3Xd threat_source, int maxgeneration, std::fstream* Log, std::fstream* Solution)
 {
 	// Step 1 //
-	int n = 10;		//number of particles in a subgroup
-	int N = 10;		//number of way-points
-	int G_n = 5;	//number of subgroups
-	Matrix2d startendpoints{ {0, 30},{0, 30} };
-	std::cout << startendpoints << "\n\n";
+	std::clock_t t0 = std::clock();
+	bool success = true;
+	bool timer_running = true;
+	//int n = 10;		//number of particles in a subgroup
+	//int N = 10;		//number of way-points
+	//int G_n = 5;	//number of subgroups
+	//Matrix2d startendpoints{ {0, 30},{0, 30} };
 	Map<Matrix<double, 2, 1>> startpoint(startendpoints(placeholders::all, 0).data(), 2, 1);
 	Map<Matrix<double, 2, 1>> endpoint(startendpoints(placeholders::all, 1).data(), 2, 1);
-	std::cout << startpoint << "\n\n" << endpoint << "\n\n";
 	RowVector2d position_range;
 	position_range(0) = startendpoints(1, placeholders::all).minCoeff();
 	position_range(1) = startendpoints(1, placeholders::all).maxCoeff();
-	std::cout << position_range;
 	RowVectorXd xIntervals = VectorXd::LinSpaced(N, startendpoints(0, 0), startendpoints(0, 1));
 	// swarm initialization
 	Tensor<double, 3> swarm = swarmInit(position_range, n, N, G_n);
 	// constraints
-	double theta_Tmax = 60;
-	double theta_Cmax = 45;
-	Matrix3Xd threat_source
-	{
-		{6.2280, 17.781, 15.681, 6.5280, 22.581, 15.057, 21.036},
-		{8.5230, 4.6080, 17.208, 13.629, 21.108, 11.835, 15.846},
-		{2.2826, 1.9663, 2.8540, 2.0762, 1.9393, 2.4483, 2.4404}
-	};
-	int maxgeneration = 100;
+	//double theta_Tmax = 60;
+	//double theta_Cmax = 45;
+	//Matrix3Xd threat_source
+	//{
+	//	{6.2280, 17.781, 15.681, 6.5280, 22.581, 15.057, 21.036},
+	//	{8.5230, 4.6080, 17.208, 13.629, 21.108, 11.835, 15.846},
+	//	{2.2826, 1.9663, 2.8540, 2.0762, 1.9393, 2.4483, 2.4404}
+	//};
+	//int maxgeneration = 30;
 	double P_c = 0.85;
 	ArrayXd omega = ArrayXd::LinSpaced(maxgeneration, 0.7, 0.4);
 	double phi_p = 0.2;    // cognitive coefficient
@@ -322,7 +325,13 @@ int fakeMain()
 	Tensor<double, 3> G_obj(G_n, 1, 1);
 	G_obj.setConstant(std::numeric_limits<double>::infinity());
 	// The solution is apparently the best particle from each group
-	Map<MatrixXd> solution(G_obj.data(), G_n, N);
+	Map<MatrixXd> solution(G_pos.data(), G_n, N);
+
+	// visualization
+	*Log << "Initial generation:\n";
+	*Log << "swarm:\n" << swarm << "\n\n";
+	*Log << "solution:\n" << solution << "\n\n";
+	*Log << "G_obj:\n" << G_obj << "\n\n";
 
 	MatrixXd G_obj_log(G_n, maxgeneration);
 	Map<MatrixXd> G_obj_temp(G_obj.data(), G_n, 1);
@@ -330,7 +339,7 @@ int fakeMain()
 
 	while (generation <= maxgeneration)
 	{
-		std::cout << "enter generation " << generation << ":\n";
+		*Log << "enter generation " << generation << ":================================================================================\n";
 
 		// calculate the objective of this iteration of swarm
 		Tensor<double, 3> P_objective = F(swarm, xIntervals, solution, threat_source, theta_Tmax, theta_Cmax, omega_d, omega_c, CT, N_W);
@@ -365,7 +374,7 @@ int fakeMain()
 			}
 		}
 		// regenerates the solution from G_pos
-		new (&solution) Map<MatrixXd> (G_obj.data(), G_n, N);
+		new (&solution) Map<MatrixXd> (G_pos.data(), G_n, N);
 		// check if there is any duplication of particles
 		ArrayXi reinit_group_indexes = repeatedRow(solution);
 		swarm = swarmInit(swarm, reinit_group_indexes);
@@ -379,31 +388,38 @@ int fakeMain()
 		}
 
 		new (&G_obj_temp) Map<MatrixXd>(G_obj.data(), G_n, 1);
-		G_obj_log(placeholders::all, generation) = G_obj_temp;
+		G_obj_log(placeholders::all, generation - 1) = G_obj_temp;
+
+		// visualization
+		*Log << "solution:\n" << solution << "\n\n";
+		*Log << "G_obj:\n" << G_obj << "\n\n";
+		*Log << "G_obj_log:\n" << G_obj_log << "\n\n";
+		*Log << "NOW update velocity and position:------------------------------------------------------------------\n";
 
 		// Step 4 //
 		// update velocity and position of the swarm
 		// modification: uses random C/D switching PSO with convergence ratio P_c for velocity update
 		for (int i = 0; i < G_n; i++)
 		{
+			*Log << "Group " << i << ": ";
 			if ((reinit_group_indexes == 2).any())
 				continue;
-			double xi = ArrayXd::Random().abs()(0);
+			double xi = Array2d::Random().abs()(0);
 			// force operator D when no feasable solution is found in this group
 			if (G_obj(i, 0, 0) == std::numeric_limits<double>::infinity())
 				xi = 2;
 			if (xi <= P_c)
-				std::cout << "Operator C\n";
+				*Log << "Operator C\n";
 			else if (xi == 2)
-				std::cout << "Operator D (forced)\n";
+				*Log << "Operator D (forced)\n";
 			else
-				std::cout << "Operator D\n";
+				*Log << "Operator D\n";
 			for (int j = 0; j < n; j++)
 			{
 				for (int k = 0; k < N; k++)
 				{
-					double r1 = ArrayXd::Random().abs()(0);
-					double r2 = ArrayXd::Random().abs()(0);
+					double r1 = Array2d::Random().abs()(0);
+					double r2 = Array2d::Random().abs()(0);
 					if (xi <= P_c)
 					{
 						// Operator C
@@ -427,24 +443,78 @@ int fakeMain()
 				}
 			}
 		}
-		
+
 		// Step 5 //
 		// adjust the particles to satisfy y(i) <= y(i+1)
 		for (int i = 0; i < G_n; i++)
 		{
+			//Log << "i = " << i << ":\n";
 			for (int j = 0; j < n; j++)
 			{
+				//Log << "j = " << j << ":\n";
 				offsets_3_swarm = { i,j,0 };
 				Tensor<double, 3> swarm_temp(1, 1, N);
 				swarm_temp = swarm.slice(offsets_3_swarm, extents_3_particle);
+				//Log << "swarm_temp: " << swarm_temp << "\n";
 				Map<RowVectorXd> particle_T2M(swarm_temp.data(), 1, N);
-				TensorMap<Tensor<double, 3>> particle_M2T(particleAdjust(particle_T2M).data(), 1, 1, N);
+				//Log << "particle_T2M: " << particle_T2M << "\n";
+				RowVectorXd result = particleAdjust(particle_T2M);
+				//Log << "result: " << result << "\n";
+				TensorMap<Tensor<double, 3>> particle_M2T(result.data(), 1, 1, N);
+				//Log << "particle_M2T: " << particle_M2T << "\n";
 				swarm.slice(offsets_3_swarm, extents_3_particle) = particle_M2T;
 			}
 		}
 
+		// visualization
+		*Log << "swarm:\n" << swarm << "\n\n";
+
+		// timer
+		if (timer_running)
+		{
+			for (int i = 0; i < G_n; i++)
+			{
+				if (G_obj(i, 0, 0) == std::numeric_limits<double>::infinity())
+					success = success && false;
+				else
+					success = success && true;
+			}
+			if (success)
+			{
+				std::clock_t t1 = std::clock();
+				double time = (t1 - t0) / (CLOCKS_PER_SEC / 1000);
+				std::cout << time << "ms, at generation " << generation << "\n";
+				timer_running = false;
+			}
+			else
+				success = true;
+		}
 		generation++;
 	}
 
+	// visualization
+	*Solution << G_n << "\n";
+	*Solution << N << "\n";
+	*Solution << xIntervals << "\n";
+	*Solution << solution << "\n";
+
 	return 0;
+}
+
+Matrix2Xd plotCircle(Matrix<double, 3, 1> threat_source)
+{
+	Array<double, 1, Dynamic> t = Array<double, 1, Dynamic>::LinSpaced(100, 0, 2 * acos(-1));
+	Matrix2Xd circbmp(2, 100);
+	circbmp(0, placeholders::all) = threat_source(2, 0) * cos(t) + threat_source(0, 0);
+	circbmp(1, placeholders::all) = threat_source(2, 0) * sin(t) + threat_source(1, 0);
+	return circbmp;
+}
+
+void plotThreat_source(Matrix3Xd threat_source, std::fstream* Threat_source_bmp)
+{
+	*Threat_source_bmp << threat_source.cols() << "\n";
+	for (int i = 0; i < threat_source.cols(); i++)
+	{
+		*Threat_source_bmp << plotCircle(threat_source(placeholders::all, i)) << "\n";
+	}
 }
