@@ -4,7 +4,7 @@
 #include <iostream>
 #include <ctime>
 
-#define USER_EIGEN
+//#define USER_EIGEN
 
 #ifdef USER_EIGEN
 #include <Eigen/Dense>

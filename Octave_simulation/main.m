@@ -48,6 +48,7 @@
 
 function retval = main
     ## Step 1
+    tic();
     n = 10;         # number of particles in a subgroup
     N = 10;         # number of way-points
     G_n = 5;        # number of subgroups
@@ -63,14 +64,15 @@ function retval = main
     theta_Tmax = 60;
     theta_Cmax = 45;
     threat_source = [6.2280, 17.781, 15.681, 6.5280, 22.581, 15.057, 21.036; 8.5230, 4.6080, 17.208, 13.629, 21.108, 11.835, 15.846; 2.2826, 1.9663, 2.8540, 2.0762, 1.9393, 2.4483, 2.4404];
-    % threat_source = [-3.1; 3.2; 0.4];
     % threat_source = [6.77, 13.57, 10.13, 16.81, 14.04, 23.45; 23.07, 22.65, 17.48, 15.55, 11.22, 8.95; 1.93, 2.47, 1.49, 1.88, 2.52, 2.25];
+    % threat_source = [-3.1; 3.2; 0.4];
     # PSO parameters
-    maxgeneration = 100;
-    check = [5, 10, 30, 50, 100];
+    maxgeneration = 30;
+    check = [5, 10, 30];
     subplotrowindex = 1;
     P_c = 0.85;
     omega = linspace(0.7, 0.4, maxgeneration);
+    % omega = 0.7;
     phi_p = 0.2;    # cognitive coefficient
     phi_g = 0.2;    # social coefficient
     velocity_range = [-6.0, 6.0];
@@ -114,7 +116,7 @@ function retval = main
     subplotrowindex++;
     
     while generation <= maxgeneration
-        printf("enter generation %d:\n", generation);
+        % printf("enter generation %d:\n", generation);
 
         # calculate the objective of this iteration of swarm
         P_objective = F(swarm, xIntervals, solution, threat_source, theta_Tmax, theta_Cmax, omega_d, omega_c, CT, N_W);
@@ -157,14 +159,20 @@ function retval = main
             endfor
         endif
 
-        G_obj
+        % G_obj
         G_obj_log(:,generation) = reshape(G_obj,G_n,1);
+        if all(G_obj_log(:,generation)!=inf)
+            timer = toc();
+            disp(timer);
+            disp(generation);
+            return;
+        endif
 
         ## Step 4
         # update velocity and position of the swarm
         # modification: uses random C/D switching PSO with convergence ratio P_c for velocity update
         for i = 1:size(velocity,3)
-            printf("Group %d: ", i);
+            % printf("Group %d: ", i);
             if any(missingindex(:) == i)
                 # if the subgroup is just reset, its P_pos and G_pos is not valid, skip the update
                 continue
@@ -210,7 +218,7 @@ function retval = main
             endfor
         endfor
 
-        # Visualization
+        % # Visualization
         if any(check(:) == generation)
             printf("row %d: generation %d\n", subplotrowindex, generation);
             for i = 1:G_n
@@ -231,14 +239,15 @@ function retval = main
         generation++;
     endwhile
     
-    figure
-    plotThreat_source(threat_source);
-    hold on
-    plot(xIntervals, solution)
-    hold off
+    % figure
+    % plotThreat_source(threat_source);
+    % hold on
+    % plot(xIntervals, solution)
+    % hold off
 
-    figure
-    plot(G_obj_log')
+    % figure
+    % plot(G_obj_log')
+    % disp(timer);
 endfunction
 
 function plotThreat_source (threat_source)

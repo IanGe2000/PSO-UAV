@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>480</width>
+    <height>600</height>
+   </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>480</width>
+    <height>480</height>
+   </size>
+  </property>
+  <property name="windowTitle">
+   <string>PSO-UAV Input</string>
+  </property>
+  <property name="windowOpacity">
+   <double>1.000000000000000</double>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QGridLayout" name="gridLayout_2">
+    <item row="0" column="0">
+     <layout class="QGridLayout" name="gridLayout_upper">
+      <item row="3" column="1">
+       <widget class="QLineEdit" name="lineEdit_numberofthreatsources"/>
+      </item>
+      <item row="1" column="0" alignment="Qt::AlignHCenter|Qt::AlignVCenter">
+       <widget class="QLabel" name="label_startpoint">
+        <property name="text">
+         <string>Starting Point</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QLineEdit" name="lineEdit_G_n"/>
+      </item>
+      <item row="3" column="0" alignment="Qt::AlignHCenter|Qt::AlignVCenter">
+       <widget class="QLabel" name="label_numberofthreatsources">
+        <property name="text">
+         <string>Number of Threat Source(s)</string>
+        </property>
+       </widget>
+      </item>
+      <item row="7" column="0" alignment="Qt::AlignHCenter|Qt::AlignVCenter">
+       <widget class="QLabel" name="label_thetaTmax">
+        <property name="text">
+         <string>Max Turning Angle (deg)</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <layout class="QGridLayout" name="gridLayout_endpoint">
+        <item row="0" column="3">
+         <widget class="QLineEdit" name="lineEdit_endpoint_y"/>
+        </item>
+        <item row="0" column="0" alignment="Qt::AlignHCenter">
+         <widget class="QLabel" name="label_endpoint_x">
+          <property name="text">
+           <string>x</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QLineEdit" name="lineEdit_endpoint_x"/>
+        </item>
+        <item row="0" column="2" alignment="Qt::AlignVCenter">
+         <widget class="QLabel" name="label_endpoint_y">
+          <property name="text">
+           <string>y</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="0" column="0" alignment="Qt::AlignHCenter|Qt::AlignVCenter">
+       <widget class="QLabel" name="label_G_n">
+        <property name="text">
+         <string>Number of UAVs</string>
+        </property>
+       </widget>
+      </item>
+      <item row="8" column="1">
+       <widget class="QLineEdit" name="lineEdit_thetaCmax"/>
+      </item>
+      <item row="1" column="1">
+       <layout class="QGridLayout" name="gridLayout_startingpoint">
+        <item row="0" column="3">
+         <widget class="QLineEdit" name="lineEdit_startingpoint_y"/>
+        </item>
+        <item row="0" column="0" alignment="Qt::AlignHCenter|Qt::AlignVCenter">
+         <widget class="QLabel" name="label_startingpoint_x">
+          <property name="text">
+           <string>x</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QLineEdit" name="lineEdit_startingpoint_x"/>
+        </item>
+        <item row="0" column="2" alignment="Qt::AlignHCenter|Qt::AlignVCenter">
+         <widget class="QLabel" name="label_startingpoint_y">
+          <property name="text">
+           <string>y</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="5" column="0" alignment="Qt::AlignHCenter|Qt::AlignVCenter">
+       <widget class="QLabel" name="label_n">
+        <property name="text">
+         <string>Number of particles per group</string>
+        </property>
+       </widget>
+      </item>
+      <item row="5" column="1">
+       <widget class="QLineEdit" name="lineEdit_n"/>
+      </item>
+      <item row="8" column="0" alignment="Qt::AlignHCenter|Qt::AlignVCenter">
+       <widget class="QLabel" name="label_thetaCmax">
+        <property name="text">
+         <string>Max Climbing Angle (deg)</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0" alignment="Qt::AlignHCenter|Qt::AlignVCenter">
+       <widget class="QLabel" name="label_endpoint">
+        <property name="text">
+         <string>End Point</string>
+        </property>
+       </widget>
+      </item>
+      <item row="6" column="0">
+       <widget class="QLabel" name="label_N">
+        <property name="text">
+         <string>Number of waypoints per particle</string>
+        </property>
+       </widget>
+      </item>
+      <item row="7" column="1">
+       <widget class="QLineEdit" name="lineEdit_thetaTmax"/>
+      </item>
+      <item row="6" column="1">
+       <widget class="QLineEdit" name="lineEdit_N"/>
+      </item>
+      <item row="9" column="0" alignment="Qt::AlignHCenter|Qt::AlignVCenter">
+       <widget class="QLabel" name="label_maxgeneration">
+        <property name="text">
+         <string>Number of Optimizing Generations</string>
+        </property>
+       </widget>
+      </item>
+      <item row="9" column="1">
+       <widget class="QLineEdit" name="lineEdit_maxgeneration"/>
+      </item>
+      <item row="4" column="0" colspan="2">
+       <layout class="QGridLayout" name="gridLayout_threatsource">
+        <item row="0" column="0">
+         <widget class="QScrollArea" name="scrollArea">
+          <property name="widgetResizable">
+           <bool>true</bool>
+          </property>
+          <widget class="QWidget" name="scrollAreaWidgetContents">
+           <property name="geometry">
+            <rect>
+             <x>0</x>
+             <y>0</y>
+             <width>456</width>
+             <height>258</height>
+            </rect>
+           </property>
+          </widget>
+         </widget>
+        </item>
+       </layout>
+      </item>
+     </layout>
+    </item>
+    <item row="3" column="0">
+     <layout class="QGridLayout" name="gridLayout_lower">
+      <item row="0" column="1">
+       <widget class="QPushButton" name="pushButton_loaddefault">
+        <property name="text">
+         <string>Default</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="2">
+       <widget class="QPushButton" name="pushButton_OK">
+        <property name="text">
+         <string>OK</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

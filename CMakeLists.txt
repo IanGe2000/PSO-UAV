@@ -7,3 +7,4 @@ project ("PSO-UAV")
 
 # Include sub-projects.
 add_subdirectory ("CXX_simulation")
+add_subdirectory ("PSO-UAV_Input")
