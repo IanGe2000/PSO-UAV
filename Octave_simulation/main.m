@@ -49,6 +49,7 @@
 function retval = main
     ## Step 1
     tic();
+    flag = true;
     n = 10;         # number of particles in a subgroup
     N = 10;         # number of way-points
     G_n = 5;        # number of subgroups
@@ -116,7 +117,7 @@ function retval = main
     subplotrowindex++;
     
     while generation <= maxgeneration
-        % printf("enter generation %d:\n", generation);
+        printf("\nenter generation %d:\n", generation);
 
         # calculate the objective of this iteration of swarm
         P_objective = F(swarm, xIntervals, solution, threat_source, theta_Tmax, theta_Cmax, omega_d, omega_c, CT, N_W);
@@ -159,13 +160,13 @@ function retval = main
             endfor
         endif
 
-        % G_obj
+        G_obj
         G_obj_log(:,generation) = reshape(G_obj,G_n,1);
-        if all(G_obj_log(:,generation)!=inf)
+        if (all(G_obj_log(:,generation)!=inf) && flag)
             timer = toc();
-            disp(timer);
-            disp(generation);
-            return;
+            printf("%f elapsed after %d iterations of optimization for a set of feasable trajectories for each UAV.\n\n", timer, generation);
+            flag = false;
+            % return;
         endif
 
         ## Step 4
@@ -218,7 +219,7 @@ function retval = main
             endfor
         endfor
 
-        % # Visualization
+        # Visualization
         if any(check(:) == generation)
             printf("row %d: generation %d\n", subplotrowindex, generation);
             for i = 1:G_n
@@ -239,15 +240,14 @@ function retval = main
         generation++;
     endwhile
     
-    % figure
-    % plotThreat_source(threat_source);
-    % hold on
-    % plot(xIntervals, solution)
-    % hold off
+    figure
+    plotThreat_source(threat_source);
+    hold on
+    plot(xIntervals, solution)
+    hold off
 
-    % figure
-    % plot(G_obj_log')
-    % disp(timer);
+    figure
+    plot(G_obj_log')
 endfunction
 
 function plotThreat_source (threat_source)
