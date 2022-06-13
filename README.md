@@ -86,5 +86,6 @@ For GUI presentation please follow
 
 ```bash
 cp CXX_simulation/CXX_simulation PSO-UAV_Input/
-./PSO-UAV_Input/PSO-UAV_Input
+cd PSO-UAV_Input
+./PSO-UAV_Input
 ```
