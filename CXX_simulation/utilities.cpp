@@ -71,7 +71,12 @@ MatrixXd distance(MatrixXd X, MatrixXd Y, distance_opt opt)
 			return result;
 		}
 		break;
+	default:
+		errorHandler(unsupported_opt);
+		break;
 	}
+
+	return MatrixXd(); // Return an empty matrix as a default
 }
 
 MatrixXd distance(MatrixXd X, MatrixXd A, MatrixXd B, distance_opt opt)
@@ -125,6 +130,8 @@ MatrixXd distance(MatrixXd X, MatrixXd A, MatrixXd B, distance_opt opt)
 		errorHandler(unsupported_opt);
 		break;
 	}
+
+	return MatrixXd(); // Return an empty matrix as a default
 }
 
 MatrixXd diff(MatrixXd X)
@@ -164,7 +171,10 @@ MatrixXd diff(MatrixXd X, int K, int DIM)
 			return diff(D, K - 1, DIM);
 		}
 		else if (DIM != 1 && DIM != 2)
+		{
 			errorHandler(DIM_must_be_1_or_2);
+			return MatrixXd(); // Return an empty matrix as a default
+		}
 		else
 		{
 			Matrix<double, 0, 0> N;
@@ -172,7 +182,10 @@ MatrixXd diff(MatrixXd X, int K, int DIM)
 		}
 	}
 	else
+	{
 		errorHandler(K_must_be_positive);
+		return MatrixXd(); // Return an empty matrix as a default
+	}
 }
 
 ArrayXi repeatedRow(MatrixXd solution)

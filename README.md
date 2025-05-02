@@ -47,12 +47,12 @@ sudo cp eigen/unsupported/Eigen /usr/local/include/Eigen/unsupported -r
 
 ### Qt
 
-First, download Qt 5.9.9 installer and run
+First, download Qt 5.12.0 installer and run
 
 ```bash
-wget https://download.qt.io/archive/qt/5.9/5.9.9/qt-opensource-linux-x64-5.9.9.run
-chmod +x qt-opensource-linux-x64-5.9.9.run
-./qt-opensource-linux-x64-5.9.9.run 
+wget https://download.qt.io/archive/qt/5.12/5.12.0/qt-opensource-linux-x64-5.12.0.run
+chmod +x qt-opensource-linux-x64-5.12.0.run
+./qt-opensource-linux-x64-5.12.0.run 
 ```
 
 In the installation process, if you encountered
@@ -63,8 +63,8 @@ Warning: Network error: [ QNetworkReply::NetworkError(AuthenticationRequiredErro
 
 try Settings(bottom-left of the installation window)->no proxy.  
 
-Next, at "Select Components" page, this repo only need ```Qt 5.9.9/Sources``` and ```Qt 5.9.9/Qt Charts```.  
-Finally, for Qt 5.9.9 an additional package is needed for compiling.
+Next, at "Select Components" page, this repo only need ```Qt 5.12.0/Sources``` and ```Qt 5.12.0/Qt Charts```.  
+Finally, for Qt 5.12.0 an additional package is needed for compiling.
 
 ```bash
 sudo apt install libqt5charts5-dev
@@ -82,7 +82,7 @@ cmake --build .
 
 Now, you will have the C++ implementation of the algorithm built under ```build/CXX_simulation``` as ```CXX_simulation```, and the Qt-based GUI built under ```build/PSO-UAV_Input``` as ```PSO-UAV_Input```.  
 
-For GUI presentation please follow
+For GUI presentation please follow (in ```build``` directory):
 
 ```bash
 cp CXX_simulation/CXX_simulation PSO-UAV_Input/

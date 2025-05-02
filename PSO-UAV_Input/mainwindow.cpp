@@ -52,7 +52,7 @@ void MainWindow::on_pushButton_OK_clicked()
     Input_parameters << ui->lineEdit_thetaCmax->text().toDouble() << "\n";
     Input_parameters << ui->lineEdit_maxgeneration->text().toDouble() << "\n";
     Input_parameters.close();
-    process.start(QString::fromStdString("./CXX_simulation"));
+    process.start(QString::fromStdString("./CXX_simulation"), QStringList());
     process.waitForFinished();
     SolutionChart *solution = new SolutionChart;
     solution->show();
